@@ -1,162 +1,142 @@
-# DraftLight — Architecture Specification
+# Draftlight — Architecture Specification
 
-## 1. System Overview
+## 1. Direction and Current State
 
-DraftLight is built as a lightweight, decoupled client-server application optimized for local execution.
+Draftlight is a local-first application with a React and Vite frontend. The current implementation is frontend-only: it stores projects in browser `localStorage`, and its AI area is a presentational placeholder. No Flask, SQLite, or Ollama integration exists yet.
 
+The next phases incrementally add a local Flask API and SQLite database, then an Ollama-backed analysis service. This extends the current foundation rather than redesigning it.
+
+```text
+┌──────────────────────────────────────────────────────┐
+│ React + Vite frontend                               │
+│ Project library | context workspace | AI assistance │
+└────────────────────────┬─────────────────────────────┘
+                         │ HTTP / JSON
+                         v
+┌──────────────────────────────────────────────────────┐
+│ Local Flask backend                                  │
+│ routes -> services -> database / AI adapters         │
+└─────────────────┬───────────────────────┬────────────┘
+                  v                       v
+       ┌───────────────────┐   ┌──────────────────────┐
+       │ Local SQLite DB   │   │ Local Ollama daemon  │
+       └───────────────────┘   └──────────────────────┘
 ```
-┌────────────────────────────────────────────────────────┐
-│                   User Web Browser                     │
-│             React + Vite UI (Port 5173)                │
-└──────────────────────────┬─────────────────────────────┘
-                           │ HTTP / JSON REST
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│               DraftLight Backend Server                │
-│              Python + Flask (Port 5000)                │
-│                                                        │
-│  ┌──────────────────────┐    ┌──────────────────────┐  │
-│  │   Project Service    │    │   Ollama AI Service  │  │
-│  └──────────┬───────────┘    └──────────┬───────────┘  │
-└─────────────┼───────────────────────────┼──────────────┘
-              │ SQLite Direct             │ HTTP Client
-              ▼                           ▼
-┌─────────────────────────┐    ┌─────────────────────────┐
-│     SQLite Database     │    │      Ollama Daemon      │
-│   (draftlight.db file)  │    │  http://localhost:11434 │
-│                         │    │  (Local Open-Weight LLM)│
-└─────────────────────────┘    └─────────────────────────┘
-```
+
+The diagram describes the intended MVP architecture, not the current runtime.
 
 ---
 
-## 2. Technology Stack
+## 2. Current Foundation to Preserve
 
-| Layer | Technology | Rationale |
+- **Frontend:** React 18, Vite, scoped vanilla CSS, and shared theme tokens.
+- **Project model:** `id`, `title`, `content`, `created_at`, and `updated_at`.
+- **Persistence:** `frontend/src/services/projectStorage.js` validates and saves projects in browser `localStorage`.
+- **Behavior:** Create, select, edit, rename, and delete projects; changes save automatically.
+
+Backend work must preserve this behavior and user-created content.
+
+---
+
+## 3. Intended MVP Stack
+
+| Layer | Technology | Responsibility |
 |---|---|---|
-| **Frontend** | React 18 + Vite | Fast HMR, minimal build overhead, component-based modular UI. |
-| **Styling** | Vanilla CSS / Tailwind CSS | Lightweight, modern utility styling without heavy UI framework bloat. |
-| **Backend** | Python 3.10+ & Flask | Minimal boilerplate, native standard library support, straightforward REST routing. |
-| **Database** | SQLite (via Python standard `sqlite3`) | Zero-configuration single file database; fully local, reliable, and portable. |
-| **Local AI Engine** | Ollama REST API (`localhost:11434`) | Open-source, supports top open-weight models (`llama3.2`, `mistral`, `gemma2`, `qwen2.5`). |
+| Frontend | React 18 + Vite | Library, text workspace, AI-assistance UI, and explicit user actions. |
+| Backend | Python 3.10+ + Flask | Local JSON API, validation, orchestration, and errors. |
+| Database | SQLite via `sqlite3` | Durable local project persistence. |
+| Local AI | Ollama + an open-weight model | Analyze user-provided context and return structured guidance. |
+
+Avoid a UI framework, ORM, state library, or other dependency unless a concrete requirement justifies it.
 
 ---
 
-## 3. Directory Structure
+## 4. Backend Boundaries
 
+```text
+backend/
+├── app.py                  # Application factory and startup
+├── config.py               # DB path and Ollama URL
+├── database/
+│   ├── db.py               # Connections and transactions
+│   └── schema.sql          # SQLite schema
+├── routes/
+│   ├── projects.py         # Project HTTP boundary
+│   ├── analysis.py         # Analysis HTTP boundary
+│   └── system.py           # Health HTTP boundary
+└── services/
+    ├── project_service.py  # Project behavior
+    ├── analysis_service.py # Analysis workflow and validation
+    └── ollama_service.py   # Ollama client and prompts
 ```
-DraftLight/
-├── docs/                      # Architectural & product documentation
-│   ├── Product.md
-│   ├── Architecture.md
-│   ├── Design.md
-│   └── Rules.md
-├── frontend/                  # React + Vite application
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/
-│       ├── main.jsx
-│       ├── App.jsx
-│       ├── components/
-│       │   ├── Sidebar/       # Project list, creation, filters
-│       │   ├── Editor/        # Writing canvas, title, word stats
-│       │   ├── Companion/     # Analysis summary, 3 continuation cards
-│       │   └── Common/        # OllamaStatusBadge, Modal, Toast
-│       ├── services/          # API client modules (api.js, ollama.js)
-│       ├── hooks/             # Custom hooks (useProjects.js, useAutoSave.js)
-│       └── styles/            # Theme tokens and global styling
-└── backend/                   # Python + Flask application
-    ├── requirements.txt
-    ├── app.py                 # Application factory and entrypoint
-    ├── config.py              # Port, DB path, Ollama host configuration
-    ├── database/
-    │   ├── db.py              # SQLite connection helper & migrations
-    │   └── schema.sql         # Table definitions
-    ├── routes/
-    │   ├── projects.py        # Project CRUD REST endpoints
-    │   ├── ai.py              # Analysis and continuation endpoints
-    │   └── system.py          # Ollama health and model query endpoints
-    └── services/
-        ├── project_service.py # Project business logic and SQLite operations
-        ├── ollama_service.py  # Ollama HTTP client and prompt runner
-        └── prompts.py         # Formatted prompt templates for AI reasoning
-```
+
+- Routes translate HTTP requests and responses; they contain no SQL or prompt logic.
+- Services own application behavior and coordinate dependencies.
+- Database modules own SQL, connections, and transactions.
+- AI modules own prompts, Ollama communication, parsing, and schema validation.
+- Add only modules needed by the current implementation task.
 
 ---
 
-## 4. Database Schema (SQLite)
+## 5. Generic Project Model
 
-DraftLight uses a single normalized table with optional metadata for analysis persistence:
+Projects do not require a writing genre or any other category. The MVP needs a title and user-provided text context plus identifiers and timestamps.
 
 ```sql
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
-    title TEXT NOT NULL DEFAULT 'Untitled Draft',
-    content TEXT DEFAULT '',
-    genre TEXT DEFAULT 'story', -- 'story', 'poem', 'blog', 'notes'
-    last_analysis_json TEXT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    title TEXT NOT NULL DEFAULT 'Untitled Project',
+    content TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_projects_updated_at
+ON projects(updated_at DESC);
 ```
 
----
-
-## 5. API Specification
-
-### System & Health Endpoints
-- `GET /api/system/health`: Checks backend health and Ollama daemon connectivity.
-- `GET /api/system/models`: Queries Ollama (`/api/tags`) to list installed local models.
-
-### Project Endpoints
-- `GET /api/projects`: List all projects (id, title, genre, word_count, updated_at).
-- `POST /api/projects`: Create a new project.
-- `GET /api/projects/<id>`: Retrieve full project details including content and cached analysis.
-- `PUT /api/projects/<id>`: Update project title, content, or genre.
-- `DELETE /api/projects/<id>`: Delete a project.
-
-### AI Endpoints
-- `POST /api/ai/analyze`
-  - **Input:** `{ "project_id": str, "content": str, "model": str }`
-  - **Output:** `{ "tone": str, "themes": list[str], "open_threads": list[str], "summary": str }`
-- `POST /api/ai/continue`
-  - **Input:** `{ "project_id": str, "content": str, "model": str, "style_hint": str }`
-  - **Output:**
-    ```json
-    {
-      "suggestions": [
-        {
-          "type": "narrative_momentum",
-          "title": "Forward Momentum",
-          "text": "..."
-        },
-        {
-          "type": "catalyst_twist",
-          "title": "Unforeseen Catalyst",
-          "text": "..."
-        },
-        {
-          "type": "reflective_depth",
-          "title": "Reflective Subtext",
-          "text": "..."
-        }
-      ]
-    }
-    ```
+The API model should match the frontend shape to reduce migration risk. AI analysis is derived data and is not required to create or edit a project. Persist it only if a later proven requirement justifies doing so.
 
 ---
 
-## 6. Local AI Integration Strategy
+## 6. Planned API Surface
 
-### Ollama Communication
-- Backend communicates with Ollama via `requests` or `urllib` to `http://localhost:11434/api/generate` with `stream: false` (or server-sent events for real-time streaming in future iterations).
-- Default recommended model: `llama3.2:3b` for fast consumer laptop execution, with seamless switching to `mistral:7b` or `qwen2.5:7b`.
+- `GET /api/projects` — list projects by most recent update.
+- `POST /api/projects` — create a project.
+- `GET /api/projects/<id>` — retrieve one project.
+- `PUT /api/projects/<id>` — update its title and/or content.
+- `DELETE /api/projects/<id>` — delete a project after explicit UI confirmation.
+- `GET /api/system/health` — report backend availability; include Ollama status once integrated.
+- `POST /api/analysis` — analyze supplied text context without mutating the project.
 
-### Prompt Architecture & Determinism
-- **JSON Mode Enforced:** Prompts request strict JSON output with defined keys to avoid parsing failures.
-- **Context Truncation Guard:** If text exceeds model context limit, a sliding window of the latest characters/paragraphs is prioritized alongside the opening lines to maintain context without exceeding token budgets.
-- **Non-Destructive Boundary:** All continuations represent standalone extension candidates; none are merged into the draft on the backend.
+Use one consistent success/error envelope, appropriate status codes, and validated inputs. Finalize exact payloads during their implementation tasks.
 
+---
+
+## 7. Structured AI Boundary
+
+The first response schema is deliberately small and general:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `summary` | string | Concise description of the current state. |
+| `unfinished` | string list | Unfinished parts or open threads. |
+| `questions` | string list | Blockers or unclear points. |
+| `next_steps` | object list | A few titled actions with short rationales. |
+
+- Treat model output as untrusted input.
+- Validate keys, types, list sizes, and reasonable text limits before display.
+- Return a recoverable error for invalid output; never trust raw malformed output.
+- Analysis is read-only and cannot update stored project content.
+- Suggestions remain separate until the user explicitly copies or applies one.
+
+---
+
+## 8. Incremental Transition
+
+1. Add Flask and SQLite while the frontend continues using its current storage.
+2. Connect CRUD to the API and preserve existing content before SQLite becomes the source of truth.
+3. Add Ollama behind the analysis service.
+4. Add the validated continuation workflow to the existing companion area.
+
+Repository inspection, image analysis, cloud services, specialized agents, and complex project schemas are outside the MVP.

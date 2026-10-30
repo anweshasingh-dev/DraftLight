@@ -1,10 +1,13 @@
-# DraftLight — Development Rules & Conventions
+# Draftlight — Development Rules & Conventions
 
 ## 1. Core Principles
 
 - **Simplicity First:** Avoid premature optimization, heavy frameworks, or unnecessary abstractions. If Python's built-in `sqlite3` or a 20-line React hook accomplishes the task cleanly, do not install a third-party dependency.
-- **Hacktoberfest-Ready Modularity:** Each module (database, routes, services, frontend components) should have single responsibilities and obvious interfaces so contributors can easily add features or fix bugs in isolation.
+- **Local-First:** Project data and AI inference remain local for the MVP. Do not introduce accounts, cloud sync, telemetry, or hosted AI services without an approved product change.
+- **Preserve User Content:** Treat user-created titles and context as irreplaceable. Migrations and persistence changes must preserve existing data or provide an explicit, recoverable transition.
+- **Maintainable Modularity:** Each module (database, routes, services, AI logic, and frontend components) has one clear responsibility and an obvious interface.
 - **AI-Assisted Friendliness:** Maintain small, readable files (<200 lines where practical), typed Python functions, and clean component contracts.
+- **Incremental Delivery:** Implement and verify one roadmap task at a time. Do not expand scope without first updating the product requirements and roadmap.
 
 ---
 
@@ -14,13 +17,13 @@
 - **Functional Components & Hooks:** Use standard React functional components. Avoid class components and complex state management libraries (Redux, Zustand) for the MVP—React's built-in `useState`, `useCallback`, and custom hooks are sufficient.
 - **Clean Service Boundaries:**
   - Never call raw `fetch()` directly inside UI components.
-  - All API interactions must be encapsulated in `src/services/api.js` or `src/services/ollama.js`.
+  - All backend interactions must be encapsulated in `src/services/api.js` or another focused API client module. The frontend must not call Ollama directly.
 - **Component File Structure:** Group components by feature domain:
   - `components/Sidebar/`: Project drawer and creation controls.
-  - `components/Editor/`: The drafting canvas and word stats.
+  - `components/Editor/`: The project context workspace and text stats.
   - `components/Companion/`: Analysis view and suggestion cards.
   - `components/Common/`: Badges, buttons, and alert toasts.
-- **Styling Discipline:** Use clean Tailwind utility classes or scoped CSS. Maintain consistent spacing, typography tokens, and the warm dark palette defined in `docs/Design.md`.
+- **Styling Discipline:** Prefer the existing scoped CSS and shared tokens. Preserve the split workspace and restrained monochrome direction defined in `docs/Design.md`.
 
 ---
 
@@ -29,7 +32,7 @@
 ### Structure & Routing
 - **Modular Blueprints:** Group routes by concern:
   - `routes/projects.py` for project CRUD.
-  - `routes/ai.py` for Ollama analysis and generation.
+  - `routes/analysis.py` for the user-requested analysis workflow.
   - `routes/system.py` for Ollama health and local model discovery.
 - **Uniform API Response Structure:**
   - **Success:** `{"success": true, "data": { ... }}`
@@ -50,21 +53,21 @@
 
 ## 4. Local AI & Ollama Integration Rules (Critical)
 
-### The Non-Overwrite Rule (Author Sovereignty)
+### The Non-Overwrite Rule (User Control)
 > [!IMPORTANT]
 > **The AI must NEVER replace or mutate the user's existing text automatically.**
-- All AI-generated continuations must be returned as separate candidate suggestions.
-- The user must explicitly click an action (`Append to Draft`, `Insert at Cursor`, or `Copy`) for AI text to enter the editor.
+- All AI-generated analysis and next-step suggestions must remain separate from user-created content.
+- The user must take an explicit action before any suggestion can enter the workspace.
 - The backend must not touch the stored project content during analysis or continuation calls.
 
 ### Prompting & Output Parsing
-- Prompts must explicitly instruct the local LLM to return valid JSON with strict schema tags (e.g. `tone`, `themes`, `suggestions`).
-- Backend `ollama_service.py` must include a robust fallback parser that cleans markdown fences (````json ... ````) before deserializing.
-- If JSON parsing fails due to local model quirks, fall back to a structured delimiter parser rather than crashing the user request.
+- Prompts must request valid JSON matching the documented analysis schema.
+- Treat model output as untrusted: parse it defensively and validate keys, types, list sizes, and text limits before display.
+- If parsing or validation fails, return a clear recoverable error. Do not silently accept malformed output or expose it as trusted analysis.
 
 ### Local Performance & Latency Handling
 - Set reasonable timeouts for Ollama HTTP calls (e.g., 60s) to avoid hanging requests if a user runs a large model on limited hardware.
-- The frontend must display an animated, non-blocking "Illuminating..." state during inference and provide an abort controller or cancel option if generation takes too long.
+- The frontend must display an animated, non-blocking analysis state during inference and provide a cancel option if generation takes too long.
 - Default to recommending lightweight models (3B to 7B parameters) in all onboarding prompts and documentation.
 
 ---

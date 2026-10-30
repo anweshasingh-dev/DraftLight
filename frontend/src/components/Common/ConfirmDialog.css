@@ -1,0 +1,102 @@
+.dialog-backdrop {
+  align-items: center;
+  background: rgb(21 21 21 / 58%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 20;
+}
+
+.confirm-dialog {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  max-width: 430px;
+  width: 100%;
+}
+
+.confirm-dialog-titlebar {
+  align-items: center;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--paper) 0 3px,
+    var(--line-strong) 3px 4px
+  );
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: 0.1em;
+  min-height: 38px;
+  padding: 0 14px;
+  text-transform: uppercase;
+}
+
+.confirm-dialog-titlebar > * {
+  background: var(--paper);
+}
+
+.confirm-dialog-body {
+  padding: 28px;
+}
+
+.confirm-dialog h2 {
+  font-family: var(--font-editor);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  margin: 0 0 10px;
+}
+
+.confirm-dialog p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 26px;
+}
+
+.confirm-dialog-actions button {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  min-height: 38px;
+  padding: 0 13px;
+  text-transform: uppercase;
+}
+
+.confirm-dialog-actions button:hover,
+.confirm-dialog-actions button:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.confirm-dialog-actions button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.confirm-dialog-actions .delete-confirm-button {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.confirm-dialog-actions .delete-confirm-button:hover,
+.confirm-dialog-actions .delete-confirm-button:focus-visible {
+  background: var(--paper);
+  color: var(--ink);
+}

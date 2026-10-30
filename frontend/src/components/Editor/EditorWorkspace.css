@@ -1,0 +1,132 @@
+.editor-workspace {
+  background: var(--paper);
+  display: grid;
+  grid-template-rows: 54px minmax(0, 1fr) 42px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.editor-toolbar,
+.editor-statusbar {
+  align-items: center;
+  display: flex;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.editor-toolbar {
+  border-bottom: 1px solid var(--line);
+  justify-content: space-between;
+  padding: 0 28px;
+}
+
+.window-label,
+.memory-label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  letter-spacing: 0.12em;
+}
+
+.window-label {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.memory-label {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.editor-scroll-area {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.editor-page {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  max-width: 760px;
+  min-height: 100%;
+  padding: clamp(48px, 7vh, 82px) 42px 56px;
+  width: 100%;
+}
+
+.project-title-input {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  font-family: var(--font-editor);
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  outline: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.project-title-input::placeholder,
+.writing-area::placeholder {
+  color: var(--faint);
+}
+
+.project-title-input:focus-visible {
+  box-shadow: inset 0 -1px 0 var(--ink);
+}
+
+.title-rule {
+  align-items: center;
+  display: flex;
+  height: 42px;
+}
+
+.title-rule::before {
+  background: var(--ink);
+  content: '';
+  height: 1px;
+  width: 34px;
+}
+
+.title-rule span {
+  background: var(--ink);
+  border-radius: 50%;
+  height: 3px;
+  margin-left: 5px;
+  width: 3px;
+}
+
+.writing-area {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  flex: 1;
+  font-family: var(--font-editor);
+  font-size: 18px;
+  line-height: 1.8;
+  min-height: 440px;
+  outline: none;
+  padding: 0;
+  resize: none;
+  width: 100%;
+}
+
+.editor-statusbar {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+  gap: 20px;
+  justify-content: flex-end;
+  letter-spacing: 0.08em;
+  padding: 0 28px;
+}
+
+.editor-statusbar span + span::before {
+  color: var(--line-strong);
+  content: '/';
+  margin-right: 20px;
+}

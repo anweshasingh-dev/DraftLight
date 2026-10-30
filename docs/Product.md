@@ -1,95 +1,99 @@
-# DraftLight — Product Specification
+# Draftlight — Product Specification
 
-## 1. Vision & Overview
-**DraftLight** is a local-first AI writing companion designed to revive unfinished creative writing—abandoned drafts, poems, blog posts, fragmented story scenes, and scattered thought notes. 
+## 1. Product Direction
 
-Rather than generating full texts from scratch, DraftLight serves as an empathetic sounding board that reads what already exists, assesses its emotional tone, themes, and unresolved threads, and provides three distinct, imaginative directions to help the writer overcome creative block.
+**Draftlight — A little light for the things you haven't finished.**
+
+Draftlight is a local-first AI companion for returning to unfinished work. It helps a person understand where they left off, what remains unfinished or unclear, what may be blocking progress, and what practical step they could take next.
+
+The work may be a story, article, software project, plan, personal goal, creative project, or another unfinished idea. Draftlight does not require the user to classify it. The shared problem is lost momentum.
+
+**Core promise: Understand where you left off. Find your next step. Keep going.**
+
+Draftlight supports the user's judgment rather than taking over the work. AI analysis and suggestions remain separate from user-created content until the user explicitly chooses to use them.
 
 ---
 
-## 2. Core Principles
-1. **Local-First & Private:** All data and AI inference run locally on the user's machine. Zero cloud lock-in, zero external telemetry, zero paid AI APIs.
-2. **Author Sovereignty (Never Overwrite):** The AI never mutates or replaces the user's original words. Continuations are presented alongside the original draft for the author to choose, tweak, append, or discard.
-3. **Low Friction & Distraction-Free:** Simple, lightweight interface focused on writing and reflection, avoiding feature bloat and complicated formatting bars.
-4. **Open Source & Hacktoberfest Friendly:** Clean, modular, and easy for new open-source contributors to understand and extend.
+## 2. Product Principles
+
+1. **Momentum over automation:** Help the user regain context and take a manageable next step; do not attempt to complete the whole project.
+2. **Local-first:** Keep project data and AI inference on the user's machine for the MVP.
+3. **User control:** Preserve user-created content. Never silently rewrite, replace, or append to it.
+4. **General workspace:** Use a simple title and text context that can represent many kinds of unfinished work without category-specific interfaces.
+5. **Small, focused MVP:** Prefer a useful continuation loop over a broad feature set.
 
 ---
 
-## 3. User Workflow
+## 3. Core Experience
+
+```text
+[1. Create or open a project]
+              |
+              v
+[2. Add or review the available context]
+              |
+              v
+[3. Ask Draftlight to assess the current state]
+              |
+              v
+[4. Review a summary, unfinished areas, and open questions]
+              |
+              v
+[5. Choose a practical next step]
+              |
+              v
+[6. Continue the work and save it locally]
 ```
-[1. Create / Open Project] 
-          │
-          ▼
-[2. Paste or Write Unfinished Content]
-          │
-          ▼
-[3. Request AI Analysis ("Illuminate Draft")]
-          │
-          ▼
-[4. Inspect Analysis & 3 Distinct Continuations]
-    ├─ Direction A: Narrative Momentum / Escalation
-    ├─ Direction B: Character / Perspective Shift
-    └─ Direction C: Thematic / Reflective Turn
-          │
-          ▼
-[5. Insert or Append Chosen Continuation into Editor]
-          │
-          ▼
-[6. Write & Save Project Locally to SQLite]
-```
+
+The initial AI experience works only with the text and notes the user provides. A software project, for example, can be represented by pasted notes or relevant snippets, but Draftlight will not automatically inspect its repository in the MVP.
 
 ---
 
-## 4. MVP Features
+## 4. Scope by Stage
 
-### A. Project Management
-- Create a new project (Title, Content, Project Type: Story, Poem, Blog Post, Notes).
-- Project list/drawer showing saved drafts with last modified timestamp and word count.
-- Manual and auto-save (debounced) to local SQLite database.
-- Delete or rename existing projects.
+### Current foundation (Tasks 1 and 2 complete)
 
-### B. Distraction-Free Writing Canvas
-- Plain text / lightweight Markdown editor.
-- Live word and character counter.
-- Clean typography tuned for long-form reading and drafting.
+- React and Vite frontend shell.
+- Split workspace with a project library, text workspace, and supporting companion area.
+- Create, open, edit, rename, and delete projects.
+- Generic project records containing a title, text content, and timestamps.
+- Automatic persistence in the browser's local storage.
+- Placeholder AI states; no backend or AI connection is implemented yet.
 
-### C. AI Analysis ("Draft Diagnosis")
-- Single-click action to analyze current draft content.
-- Summary of:
-  - Detected tone and mood (e.g., melancholic, inquisitive, tense).
-  - Key thematic elements and motifs.
-  - Potential cliffhangers or unresolved plot/thematic questions.
+### Planned MVP functionality
 
-### D. Three Distinct Continuation Suggestions
-- Structured generation providing three contrasting creative paths:
-  1. **Direct Progression:** Moves the immediate scene or argument forward logically.
-  2. **Surprise / Catalyst:** Introduces an unexpected development, counter-argument, or external factor.
-  3. **Atmospheric / Reflective:** Deepens internal monologue, sensory detail, or thematic subtext.
-- Action controls per suggestion:
-  - **Append to Draft**: Adds text to the end of the editor.
-  - **Insert at Cursor**: Inserts at the current caret position.
-  - **Copy to Clipboard**: Copies suggestion text for selective manual pasting.
+- Flask backend with SQLite persistence, replacing browser storage as the project source of truth after a safe transition.
+- Existing project-management interactions connected to the backend.
+- Local AI inference through Ollama and an open-weight model.
+- Structured, validated analysis that provides:
+  - a concise summary of where the user left off;
+  - unfinished parts, open questions, blockers, or unclear areas;
+  - a few practical suggestions for continuing.
+- User-controlled actions for copying or deliberately applying a suggestion without silently changing the project.
 
-### E. Ollama Environment Status
-- Real-time indicator of Ollama connection status (Online / Offline / Model missing).
-- Model selector dropdown from locally installed Ollama models (defaulting to recommended lightweight models e.g., `llama3.2:3b` or `mistral:7b`).
+### Future possibilities (not commitments)
+
+The generic project model may later support additional ways to supply context, such as selected repository information or visual material. These possibilities require separate product decisions and are not part of the MVP.
 
 ---
 
-## 5. Explicit Exclusions (Out of Scope for MVP)
-To keep the MVP lean, maintainable, and achievable, the following features are intentionally excluded:
-- ❌ **No Commercial Cloud APIs:** No OpenAI, Anthropic, or external API keys.
-- ❌ **No User Authentication or Accounts:** Single-user local desktop application.
-- ❌ **No Cloud Sync or Multi-Device Sync:** Data lives exclusively in the local SQLite database.
-- ❌ **No Heavy WYSIWYG / Rich Text formatting:** No complex tables, embedded media, or Word-style formatting engines. Plain text and simple Markdown only.
-- ❌ **No Real-Time Collaborative Editing:** No WebSockets/CRDTs.
-- ❌ **No Automated Overwrite:** AI cannot replace or rephrase text without explicit user button clicks.
-- ❌ **No Agentic Tool-Use / Web Browsing:** The model focuses strictly on creative reasoning over provided text.
+## 5. Explicit MVP Exclusions
+
+- Automatic analysis of Git repositories or codebases.
+- Image or visual analysis for art and craft projects.
+- Cloud synchronization, accounts, or collaboration.
+- Multiple specialized AI agents.
+- Automatic completion of entire projects.
+- Fine-tuning or model training.
+- Complex project-management features, workflows, or category-specific modes.
+- Silent AI edits to user-created content.
 
 ---
 
-## 6. Success Metrics for Hacktoberfest MVP
-- Quick local setup: Clone repo, `pip install`, `npm install`, and launch in under 5 minutes.
-- Smooth offline inference on consumer hardware with 3B–8B parameter open-weight models.
-- Responsive, intuitive UI with zero data loss.
+## 6. MVP Success Criteria
 
+- A returning user can quickly understand the state of an unfinished project.
+- The user receives a small set of relevant, practical next steps from the context they supplied.
+- User content remains safe, local, and under explicit user control.
+- The workflow remains useful across different kinds of projects without separate implementations.
+- Setup and local inference remain achievable on ordinary consumer hardware.

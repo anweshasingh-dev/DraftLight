@@ -1,0 +1,212 @@
+.project-sidebar {
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.brand-lockup {
+  align-items: center;
+  border-bottom: 1px solid var(--ink-soft);
+  display: flex;
+  gap: 12px;
+  min-height: 88px;
+  padding: 0 24px;
+}
+
+.brand-lockup > span:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.brand-lockup strong {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.brand-lockup small {
+  color: var(--paper-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.brand-mark {
+  align-items: center;
+  border: 1px solid var(--paper);
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.library-heading {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  padding: 28px 24px 18px;
+}
+
+.library-heading h1 {
+  font-family: var(--font-editor);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 5px 0 0;
+}
+
+.project-count {
+  color: var(--paper-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.new-project-button {
+  align-items: center;
+  background: var(--paper);
+  border: 1px solid var(--paper);
+  color: var(--ink);
+  display: flex;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  gap: 9px;
+  justify-content: center;
+  letter-spacing: 0.08em;
+  margin: 0 24px 22px;
+  min-height: 42px;
+  text-transform: uppercase;
+  transition: background 120ms ease, color 120ms ease;
+  width: calc(100% - 48px);
+}
+
+.new-project-button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.new-project-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.new-project-button:focus-visible,
+.project-list-item:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: -4px;
+}
+
+.project-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 24px;
+  scrollbar-color: var(--paper-muted) transparent;
+  scrollbar-width: thin;
+}
+
+.project-list-row {
+  border-top: 1px solid var(--ink-soft);
+  position: relative;
+  transition: background 120ms ease;
+}
+
+.project-list-row:last-child {
+  border-bottom: 1px solid var(--ink-soft);
+}
+
+.project-list-row:hover,
+.project-list-row[data-active='true'] {
+  background: var(--ink-raised);
+}
+
+.project-list-row[data-active='true'] {
+  box-shadow: inset 3px 0 0 var(--paper);
+}
+
+.project-list-item {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: grid;
+  gap: 8px;
+  padding: 17px 50px 16px 24px;
+  text-align: left;
+  width: 100%;
+}
+
+.project-item-title {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  min-width: 0;
+}
+
+.project-item-title strong {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-preview {
+  color: var(--paper-muted);
+  display: -webkit-box;
+  font-family: var(--font-editor);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-modified {
+  color: var(--paper-faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.library-empty-state {
+  color: var(--paper-muted);
+  margin: 20px 24px;
+  padding: 30px 8px;
+  text-align: center;
+}
+
+.library-empty-state p {
+  color: var(--paper);
+  font-family: var(--font-editor);
+  margin: 14px 0 7px;
+}
+
+.library-empty-state span {
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.sidebar-footer {
+  align-items: center;
+  border-top: 1px solid var(--ink-soft);
+  color: var(--paper-faint);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  gap: 8px;
+  letter-spacing: 0.08em;
+  min-height: 48px;
+  padding: 0 24px;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  background: var(--paper-muted);
+  border-radius: 50%;
+  height: 6px;
+  width: 6px;
+}

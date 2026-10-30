@@ -1,0 +1,76 @@
+.project-menu-container {
+  position: absolute;
+  right: 12px;
+  top: 11px;
+  z-index: 4;
+}
+
+.project-menu-trigger {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--paper-muted);
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  opacity: 0;
+  padding: 0;
+  transition: opacity 120ms ease, border-color 120ms ease, color 120ms ease;
+  width: 30px;
+}
+
+.project-list-row:hover .project-menu-trigger,
+.project-menu-trigger:focus-visible,
+.project-menu-trigger[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.project-menu-trigger:hover,
+.project-menu-trigger[aria-expanded='true'] {
+  border-color: var(--paper-faint);
+  color: var(--paper);
+}
+
+.project-menu-trigger:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: -4px;
+}
+
+.project-menu {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  min-width: 126px;
+  padding: 4px;
+  position: absolute;
+  right: 0;
+  top: 34px;
+}
+
+.project-menu button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: flex;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 9px;
+  text-align: left;
+  width: 100%;
+}
+
+.project-menu button:hover,
+.project-menu button:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+  outline: none;
+}
+
+.project-menu button + button {
+  border-top: 1px solid var(--line);
+}
