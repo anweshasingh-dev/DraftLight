@@ -1,7 +1,11 @@
-export const PROJECTS_STORAGE_KEY = 'draftlight.projects.v1';
-const LEGACY_PROJECTS_STORAGE_KEY = ['ghost', 'writer.projects.v1'].join('');
+import { isProject } from './projectApi';
 
-function getBrowserStorage() {
+export const PROJECTS_STORAGE_KEY = 'draftlight.projects.v1';
+export const PROJECTS_MIGRATION_KEY = 'draftlight.projects.sqlite-migration.v1';
+const LEGACY_PROJECTS_STORAGE_KEY = ['ghost', 'writer.projects.v1'].join('');
+const MIGRATION_MARKER = 'complete';
+
+export function getBrowserStorage() {
   if (typeof window === 'undefined') return null;
 
   try {
@@ -11,70 +15,62 @@ function getBrowserStorage() {
   }
 }
 
-function isValidTimestamp(value) {
-  return typeof value === 'string' && Number.isFinite(Date.parse(value));
-}
-
-function isValidProject(project) {
-  return (
-    project !== null &&
-    typeof project === 'object' &&
-    typeof project.id === 'string' &&
-    project.id.length > 0 &&
-    typeof project.title === 'string' &&
-    typeof project.content === 'string' &&
-    isValidTimestamp(project.created_at) &&
-    isValidTimestamp(project.updated_at)
-  );
-}
-
 function isValidProjectCollection(projects) {
-  if (!Array.isArray(projects) || !projects.every(isValidProject)) return false;
+  if (!Array.isArray(projects) || !projects.every(isProject)) return false;
   return new Set(projects.map((project) => project.id)).size === projects.length;
 }
 
-export function loadProjects(seedProjects) {
-  const storage = getBrowserStorage();
-
-  if (!storage) {
-    return { projects: seedProjects.map((project) => ({ ...project })), status: 'unavailable' };
-  }
+export function readLegacyProjects(storage = getBrowserStorage()) {
+  if (!storage) return { status: 'unavailable', projects: [] };
 
   try {
-    let storedValue = storage.getItem(PROJECTS_STORAGE_KEY);
+    const primaryValue = storage.getItem(PROJECTS_STORAGE_KEY);
+    const sourceKey =
+      primaryValue === null ? LEGACY_PROJECTS_STORAGE_KEY : PROJECTS_STORAGE_KEY;
+    const storedValue = primaryValue ?? storage.getItem(LEGACY_PROJECTS_STORAGE_KEY);
 
-    if (storedValue === null) {
-      storedValue = storage.getItem(LEGACY_PROJECTS_STORAGE_KEY);
-    }
-
-    if (storedValue === null) {
-      return { projects: seedProjects.map((project) => ({ ...project })), status: 'ready' };
-    }
+    if (storedValue === null) return { status: 'none', projects: [] };
 
     const projects = JSON.parse(storedValue);
     if (!isValidProjectCollection(projects)) {
-      return { projects: [], status: 'invalid' };
+      return { status: 'invalid', projects: [], sourceKey };
     }
 
-    if (storage.getItem(PROJECTS_STORAGE_KEY) === null) {
-      storage.setItem(PROJECTS_STORAGE_KEY, storedValue);
-      storage.removeItem?.(LEGACY_PROJECTS_STORAGE_KEY);
-    }
-
-    return { projects, status: 'ready' };
+    return {
+      status: 'ready',
+      projects: projects.map((project) => ({ ...project })),
+      sourceKey,
+    };
   } catch {
-    return { projects: [], status: 'invalid' };
+    return { status: 'invalid', projects: [] };
   }
 }
 
-export function saveProjects(projects) {
-  const storage = getBrowserStorage();
-  if (!storage || !isValidProjectCollection(projects)) return false;
-
+export function hasCompletedMigration(storage = getBrowserStorage()) {
+  if (!storage) return false;
   try {
-    storage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects));
+    return storage.getItem(PROJECTS_MIGRATION_KEY) === MIGRATION_MARKER;
+  } catch {
+    return false;
+  }
+}
+
+export function markMigrationComplete(storage = getBrowserStorage()) {
+  if (!storage) return false;
+  try {
+    storage.setItem(PROJECTS_MIGRATION_KEY, MIGRATION_MARKER);
     return true;
   } catch {
     return false;
   }
+}
+
+export function projectsMatch(first, second) {
+  return (
+    first.id === second.id &&
+    first.title === second.title &&
+    first.content === second.content &&
+    first.created_at === second.created_at &&
+    first.updated_at === second.updated_at
+  );
 }

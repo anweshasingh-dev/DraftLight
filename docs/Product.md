@@ -51,19 +51,20 @@ The initial AI experience works only with the text and notes the user provides. 
 
 ## 4. Scope by Stage
 
-### Current foundation (Tasks 1 and 2 complete)
+### Current foundation (Tasks 1 through 4 complete)
 
 - React and Vite frontend shell.
 - Split workspace with a project library, text workspace, and supporting companion area.
 - Create, open, edit, rename, and delete projects.
 - Generic project records containing a title, text content, and timestamps.
-- Automatic persistence in the browser's local storage.
-- Placeholder AI states; no backend or AI connection is implemented yet.
+- Local Flask JSON API with validated project CRUD routes.
+- SQLite as the primary project store, with automatic schema initialization.
+- Safe, idempotent migration of valid projects from the earlier browser-storage version.
+- Loading, saving, and recoverable backend error states.
+- Placeholder AI states; no Ollama or AI connection is implemented yet.
 
 ### Planned MVP functionality
 
-- Flask backend with SQLite persistence, replacing browser storage as the project source of truth after a safe transition.
-- Existing project-management interactions connected to the backend.
 - Local AI inference through Ollama and an open-weight model.
 - Structured, validated analysis that provides:
   - a concise summary of where the user left off;

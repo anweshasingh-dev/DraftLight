@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import './ConfirmDialog.css';
 
-function ConfirmDialog({ isOpen, projectTitle, onCancel, onConfirm }) {
+function ConfirmDialog({ isOpen, projectTitle, isBusy = false, onCancel, onConfirm }) {
   const cancelButtonRef = useRef(null);
 
   useEffect(() => {
@@ -41,14 +41,19 @@ function ConfirmDialog({ isOpen, projectTitle, onCancel, onConfirm }) {
         <div className="confirm-dialog-body">
           <h2 id="delete-dialog-title">Delete “{projectTitle}”?</h2>
           <p id="delete-dialog-description">
-            This removes the draft from this browser. This action cannot be undone.
+            This removes the draft from the local SQLite database. This action cannot be undone.
           </p>
           <div className="confirm-dialog-actions">
-            <button ref={cancelButtonRef} type="button" onClick={onCancel}>
+            <button ref={cancelButtonRef} type="button" onClick={onCancel} disabled={isBusy}>
               Keep project
             </button>
-            <button className="delete-confirm-button" type="button" onClick={onConfirm}>
-              Delete project
+            <button
+              className="delete-confirm-button"
+              type="button"
+              onClick={onConfirm}
+              disabled={isBusy}
+            >
+              {isBusy ? 'Deleting…' : 'Delete project'}
             </button>
           </div>
         </div>

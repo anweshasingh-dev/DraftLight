@@ -2,9 +2,9 @@
 
 ## 1. Direction and Current State
 
-Draftlight is a local-first application with a React and Vite frontend. The current implementation is frontend-only: it stores projects in browser `localStorage`, and its AI area is a presentational placeholder. No Flask, SQLite, or Ollama integration exists yet.
+Draftlight is a local-first application with a React and Vite frontend plus a local Flask and SQLite backend. The frontend uses the Flask project API through relative `/api` paths, and SQLite is the primary project store. The AI area remains a presentational placeholder; no Ollama integration exists yet.
 
-The next phases incrementally add a local Flask API and SQLite database, then an Ollama-backed analysis service. This extends the current foundation rather than redesigning it.
+The next phase adds an Ollama-backed analysis service behind the existing Flask boundary. This extends the current foundation rather than redesigning it.
 
 ```text
 ┌──────────────────────────────────────────────────────┐
@@ -15,7 +15,7 @@ The next phases incrementally add a local Flask API and SQLite database, then an
                          v
 ┌──────────────────────────────────────────────────────┐
 │ Local Flask backend                                  │
-│ routes -> services -> database / AI adapters         │
+│ app setup + feature modules + database / AI adapters │
 └─────────────────┬───────────────────────┬────────────┘
                   v                       v
        ┌───────────────────┐   ┌──────────────────────┐
@@ -23,7 +23,7 @@ The next phases incrementally add a local Flask API and SQLite database, then an
        └───────────────────┘   └──────────────────────┘
 ```
 
-The diagram describes the intended MVP architecture, not the current runtime.
+The diagram describes the intended full MVP architecture. Frontend API integration, Flask, and SQLite are implemented; Ollama remains a future task.
 
 ---
 
@@ -31,10 +31,10 @@ The diagram describes the intended MVP architecture, not the current runtime.
 
 - **Frontend:** React 18, Vite, scoped vanilla CSS, and shared theme tokens.
 - **Project model:** `id`, `title`, `content`, `created_at`, and `updated_at`.
-- **Persistence:** `frontend/src/services/projectStorage.js` validates and saves projects in browser `localStorage`.
+- **Persistence:** SQLite is the source of truth. `frontend/src/services/projectStorage.js` reads legacy browser projects only for safe migration.
 - **Behavior:** Create, select, edit, rename, and delete projects; changes save automatically.
 
-Backend work must preserve this behavior and user-created content.
+Future work must preserve this behavior and user-created content.
 
 ---
 
@@ -55,26 +55,22 @@ Avoid a UI framework, ORM, state library, or other dependency unless a concrete 
 
 ```text
 backend/
-├── app.py                  # Application factory and startup
-├── config.py               # DB path and Ollama URL
-├── database/
-│   ├── db.py               # Connections and transactions
-│   └── schema.sql          # SQLite schema
-├── routes/
-│   ├── projects.py         # Project HTTP boundary
-│   ├── analysis.py         # Analysis HTTP boundary
-│   └── system.py           # Health HTTP boundary
-└── services/
-    ├── project_service.py  # Project behavior
-    ├── analysis_service.py # Analysis workflow and validation
-    └── ollama_service.py   # Ollama client and prompts
+├── tests/
+│   ├── __init__.py
+│   └── test_api.py              # Isolated API and persistence tests
+├── app.py                       # App factory, health route, errors, startup
+├── config.py                    # Local database path
+├── database.py                  # Schema, connections, SQL, transactions
+├── projects.py                  # Project routes, validation, orchestration
+└── requirements.txt             # Pinned backend dependencies
 ```
 
-- Routes translate HTTP requests and responses; they contain no SQL or prompt logic.
-- Services own application behavior and coordinate dependencies.
-- Database modules own SQL, connections, and transactions.
+- `app.py` creates and configures Flask, initializes the database, registers project routes, exposes health status, and owns application-level error handling.
+- `projects.py` keeps the related project routes, validation, ID and timestamp creation, and CRUD orchestration together. It contains no SQL.
+- `database.py` owns the small SQLite schema, connection lifecycle, parameterized SQL, and import transaction.
+- `config.py` remains separate so the database path can still be overridden through Flask configuration.
 - AI modules own prompts, Ollama communication, parsing, and schema validation.
-- Add only modules needed by the current implementation task.
+- Add a new layer only when it introduces a meaningful boundary; do not add forwarding-only service or repository modules.
 
 ---
 
@@ -85,7 +81,7 @@ Projects do not require a writing genre or any other category. The MVP needs a t
 ```sql
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
-    title TEXT NOT NULL DEFAULT 'Untitled Project',
+    title TEXT NOT NULL DEFAULT 'Untitled Draft',
     content TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -99,17 +95,18 @@ The API model should match the frontend shape to reduce migration risk. AI analy
 
 ---
 
-## 6. Planned API Surface
+## 6. API Surface
 
 - `GET /api/projects` — list projects by most recent update.
 - `POST /api/projects` — create a project.
+- `POST /api/projects/import` — atomically and idempotently import validated legacy browser projects without overwriting an existing library.
 - `GET /api/projects/<id>` — retrieve one project.
 - `PUT /api/projects/<id>` — update its title and/or content.
 - `DELETE /api/projects/<id>` — delete a project after explicit UI confirmation.
-- `GET /api/system/health` — report backend availability; include Ollama status once integrated.
-- `POST /api/analysis` — analyze supplied text context without mutating the project.
+- `GET /api/health` — report backend availability.
+- `POST /api/analysis` — planned for a later task; analyze supplied text context without mutating the project.
 
-Use one consistent success/error envelope, appropriate status codes, and validated inputs. Finalize exact payloads during their implementation tasks.
+Implemented endpoints use `{"success": true, "data": { ... }}` for successful responses and `{"success": false, "error": "Human-readable explanation"}` for errors, with appropriate status codes and validated JSON inputs.
 
 ---
 
@@ -134,8 +131,8 @@ The first response schema is deliberately small and general:
 
 ## 8. Incremental Transition
 
-1. Add Flask and SQLite while the frontend continues using its current storage.
-2. Connect CRUD to the API and preserve existing content before SQLite becomes the source of truth.
+1. Add Flask and SQLite while the frontend continues using its current storage. **Complete.**
+2. Connect CRUD to the API and preserve existing content before SQLite becomes the source of truth. **Complete.**
 3. Add Ollama behind the analysis service.
 4. Add the validated continuation workflow to the existing companion area.
 

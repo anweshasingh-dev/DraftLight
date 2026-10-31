@@ -37,6 +37,10 @@
 .memory-label {
   color: var(--muted);
   font-size: 9px;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .editor-scroll-area {

@@ -12,55 +12,97 @@ Draftlight is a working name. This repository makes no claim about name availabi
 
 ## Current Status
 
-The frontend foundation and browser-based project persistence are complete.
+The frontend project workflow is connected to the local Flask API, with SQLite as the primary project store and safe migration for projects created by the earlier browser-storage version.
 
 Currently implemented:
 
 - React and Vite frontend shell.
 - Split monochrome workspace with a project library, text workspace, and companion panel.
 - Create, open, edit, rename, and delete projects.
-- Automatic persistence in browser `localStorage`.
+- Automatic persistence in local SQLite storage through Flask.
 - Generic projects with a title, text content, and timestamps.
+- Local Flask JSON API with validated project CRUD routes.
+- Safe, idempotent migration of valid legacy `localStorage` projects.
+- Loading, saving, and recoverable backend error states.
+- Automatic SQLite schema initialization and persistent project storage.
+- Isolated backend tests for API behavior and persistence.
 - Placeholder companion states for the future AI workflow.
 
 Not implemented yet:
 
-- Flask backend.
-- SQLite persistence.
 - Ollama connection or AI inference.
 - Project analysis and next-step suggestions.
 
 The companion panel currently contains placeholders. It does not send project content to an AI service.
 
-## Run the Current Frontend
+## Run the Development Environment
 
 ### Prerequisites
 
 - A current Node.js release.
 - npm.
+- Python 3.10 or newer.
 
-### Setup
+### First-time setup
 
-```bash
-cd frontend
-npm install
-npm run dev
+From the repository root in PowerShell:
+
+```powershell
+npm install --prefix frontend
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```
 
-Open the local address printed by Vite.
+### Start both development servers
 
-To verify a production build:
+Start Flask in the first terminal:
 
-```bash
-cd frontend
-npm run build
+```powershell
+.\.venv\Scripts\python.exe -m backend.app
+```
+
+Start Vite in a second terminal:
+
+```powershell
+npm run dev --prefix frontend
+```
+
+Open `http://127.0.0.1:5173/` in the browser. This is the single browser origin for local development.
+
+Vite forwards requests beginning with `/api` to Flask on `http://127.0.0.1:5000` while preserving the request path. Browser-side API calls should therefore use relative paths such as:
+
+- `/api/health`
+- `/api/projects`
+
+For example, `http://127.0.0.1:5173/api/health` is proxied to `http://127.0.0.1:5000/api/health`. Port 5000 remains available for direct backend debugging.
+
+The proxy is development-only. Project management uses the Flask API and SQLite; browser `localStorage` is read only by the legacy migration path. SQLite creates `backend/draftlight.db` automatically when Flask first starts.
+
+### Verification commands
+
+To verify a frontend production build:
+
+```powershell
+npm run build --prefix frontend
+```
+
+Run the frontend service, migration, and hook tests with:
+
+```powershell
+npm test --prefix frontend
+```
+
+Run the isolated backend tests with:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s backend\tests -v
 ```
 
 ## Local Data
 
-The current frontend stores projects in the browser under the `draftlight.projects.v1` local-storage key.
+SQLite is the primary project database. The frontend retrieves and mutates projects through relative `/api` requests, which Vite proxies to Flask during development.
 
-This data is local to the current browser profile. Clearing site data or using another browser can make those projects unavailable. A safe transition path must be provided before SQLite replaces browser storage.
+On first load, Draftlight checks the previous `draftlight.projects.v1` browser-storage key. If SQLite is empty, valid browser projects are imported atomically with their IDs and timestamps. A successful import writes the `draftlight.projects.sqlite-migration.v1` marker, but the original browser data is retained for recovery. Failed imports leave both the marker and browser data untouched so retrying is safe. If SQLite already contains different projects, Draftlight uses SQLite without overwriting or deleting the browser data.
 
 ## Product Principles
 
@@ -72,11 +114,16 @@ This data is local to the current browser profile. Clearing site data or using a
 
 ## Planned MVP Architecture
 
-The next phases will extend the current frontend with:
+The backend foundation now provides:
 
 - A local Flask JSON API.
 - SQLite as the durable project store.
-- Clear route, service, database, and AI module boundaries.
+- A practical backend split between application setup, project API behavior, configuration, and SQLite access.
+- Frontend CRUD through relative API paths and a development proxy.
+- Safe legacy browser-data migration.
+
+The next phases will add:
+
 - Local inference through Ollama and an open-weight model.
 - Structured AI output that is validated before display.
 
@@ -86,8 +133,8 @@ The first AI workflow will summarize the current state, identify unfinished or u
 
 - [x] Task 1 — Frontend shell.
 - [x] Task 2 — Project management and browser persistence.
-- [ ] Task 3 — Flask backend and SQLite foundation.
-- [ ] Task 4 — Connect frontend project management to the backend.
+- [x] Task 3 — Flask backend and SQLite foundation.
+- [x] Task 4 — Connect frontend project management to the backend.
 - [ ] Task 5 — Local AI analysis service through Ollama.
 - [ ] Task 6 — First continuation workflow.
 
@@ -103,7 +150,8 @@ DraftLight/
 │   ├── Design.md        # Split-workspace visual direction
 │   ├── Rules.md         # Development and AI safety rules
 │   └── Tasks.md         # Incremental implementation roadmap
-└── frontend/            # Current React and Vite application
+├── frontend/            # React and Vite application
+└── backend/             # Flask API, SQLite access, and backend tests
 ```
 
 ## Foundation Documents

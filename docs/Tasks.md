@@ -16,18 +16,22 @@ Implemented project creation, selection, editing, renaming, deletion, timestamps
 
 ## Task 3 — Flask backend and SQLite foundation
 
+**Status: Complete**
+
 **Goal:** Introduce a local backend and durable database without adding AI behavior.
 
 **Acceptance criteria:**
 
 - A modular Flask application starts locally and exposes a health endpoint.
 - SQLite initialization creates the generic projects table documented in `Architecture.md`.
-- Project CRUD routes use separated route, service, and database layers.
+- Project CRUD routes, validation, and orchestration are grouped by feature, while SQLite access remains separate.
 - Request and response data are validated and errors are consistent.
 - Automated backend tests cover database initialization and core CRUD behavior.
 - No frontend behavior is switched to the backend in this task.
 
 ## Task 4 — Connect frontend project management to the backend
+
+**Status: Complete**
 
 **Goal:** Make SQLite the source of truth while preserving the existing experience and content.
 

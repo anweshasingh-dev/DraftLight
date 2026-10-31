@@ -157,7 +157,9 @@ function ProjectSidebar({
 
       <footer className="sidebar-footer">
         <span className="status-dot" aria-hidden="true" />
-        {persistenceLabel}
+        <span className="status-copy" title={persistenceLabel}>
+          {persistenceLabel}
+        </span>
       </footer>
     </aside>
   );

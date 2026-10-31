@@ -100,3 +100,8 @@
   background: var(--paper);
   color: var(--ink);
 }
+
+.confirm-dialog-actions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}

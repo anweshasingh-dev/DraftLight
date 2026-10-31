@@ -35,7 +35,7 @@ function EditorWorkspace({
           <PencilLine size={14} strokeWidth={1.7} aria-hidden="true" />
           Draft
         </span>
-        <span className="memory-label">
+        <span className="memory-label" title={persistenceLabel}>
           <Circle size={6} fill="currentColor" aria-hidden="true" />
           {persistenceLabel}
         </span>

@@ -200,7 +200,7 @@
   gap: 8px;
   letter-spacing: 0.08em;
   min-height: 48px;
-  padding: 0 24px;
+  padding: 10px 24px;
   text-transform: uppercase;
 }
 
@@ -208,5 +208,14 @@
   background: var(--paper-muted);
   border-radius: 50%;
   height: 6px;
+  flex: 0 0 auto;
   width: 6px;
+}
+
+.status-copy {
+  display: -webkit-box;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }

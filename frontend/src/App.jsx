@@ -1,56 +1,71 @@
-import { useState } from 'react';
-import { FilePlus2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { FilePlus2, LoaderCircle, ServerOff } from 'lucide-react';
 import ConfirmDialog from './components/Common/ConfirmDialog';
 import CompanionPanel from './components/Companion/CompanionPanel';
 import EditorWorkspace from './components/Editor/EditorWorkspace';
 import ProjectSidebar from './components/Sidebar/ProjectSidebar';
 import { useProjects } from './hooks/useProjects';
 
-const persistenceLabels = {
-  ready: 'Browser storage ready',
-  saved: 'Saved in this browser',
-  invalid: 'Saved data was unreadable',
-  unavailable: 'Memory only',
-};
-
 function App() {
-  const { projects, storageStatus, isCreating, createProject, updateProject, deleteProject } =
-    useProjects();
-  const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id ?? null);
+  const {
+    projects,
+    loadStatus,
+    statusMessage,
+    isCreating,
+    isDeleting,
+    reloadProjects,
+    createProject,
+    openProject,
+    updateProject,
+    deleteProject,
+  } = useProjects();
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
   const pendingDeleteProject = projects.find((project) => project.id === pendingDeleteId) ?? null;
-  const persistenceLabel = persistenceLabels[storageStatus];
+
+  useEffect(() => {
+    if (loadStatus !== 'ready') return;
+    setSelectedProjectId((currentId) => {
+      if (projects.some((project) => project.id === currentId)) return currentId;
+      return projects[0]?.id ?? null;
+    });
+  }, [loadStatus, projects]);
 
   function updateSelectedProject(field, value) {
     if (selectedProjectId) updateProject(selectedProjectId, { [field]: value });
   }
 
-  function handleCreateProject() {
-    const projectId = createProject();
+  async function handleCreateProject() {
+    const projectId = await createProject();
     if (!projectId) return;
 
     setSelectedProjectId(projectId);
     setFocusRequest({ projectId, target: 'content', token: Date.now() });
   }
 
-  function handleSelectProject(projectId) {
+  async function handleSelectProject(projectId) {
+    const project = await openProject(projectId);
+    if (!project) return;
     setSelectedProjectId(projectId);
     setFocusRequest(null);
   }
 
-  function handleRenameProject(projectId) {
+  async function handleRenameProject(projectId) {
+    const project = await openProject(projectId);
+    if (!project) return;
     setSelectedProjectId(projectId);
     setFocusRequest({ projectId, target: 'title', token: Date.now() });
   }
 
-  function confirmDeleteProject() {
+  async function confirmDeleteProject() {
     if (!pendingDeleteProject) return;
 
     const remainingProjects = projects.filter((project) => project.id !== pendingDeleteProject.id);
-    deleteProject(pendingDeleteProject.id);
+    const deleted = await deleteProject(pendingDeleteProject.id);
+    if (!deleted) return;
 
     if (selectedProjectId === pendingDeleteProject.id) {
       setSelectedProjectId(remainingProjects[0]?.id ?? null);
@@ -65,7 +80,7 @@ function App() {
       <ProjectSidebar
         projects={projects}
         selectedProjectId={selectedProjectId}
-        persistenceLabel={persistenceLabel}
+        persistenceLabel={statusMessage}
         isCreating={isCreating}
         onSelect={handleSelectProject}
         onCreate={handleCreateProject}
@@ -73,12 +88,29 @@ function App() {
         onDeleteRequest={setPendingDeleteId}
       />
 
-      {selectedProject ? (
+      {loadStatus === 'loading' ? (
+        <section className="workspace-empty-state" aria-live="polite">
+          <LoaderCircle className="loading-icon" size={30} strokeWidth={1.3} aria-hidden="true" />
+          <p className="eyebrow">Opening the library</p>
+          <h2>Gathering your projects.</h2>
+          <p>Draftlight is checking SQLite and any browser projects that need migration.</p>
+        </section>
+      ) : loadStatus === 'error' ? (
+        <section className="workspace-empty-state" role="alert">
+          <ServerOff size={30} strokeWidth={1.3} aria-hidden="true" />
+          <p className="eyebrow">The local backend is unavailable</p>
+          <h2>Your work is still safe.</h2>
+          <p>{statusMessage}</p>
+          <button type="button" onClick={reloadProjects}>
+            Retry connection
+          </button>
+        </section>
+      ) : selectedProject ? (
         <div className="workspace-shell">
           <EditorWorkspace
             key={selectedProject.id}
             project={selectedProject}
-            persistenceLabel={persistenceLabel}
+            persistenceLabel={statusMessage}
             focusRequest={
               focusRequest?.projectId === selectedProject.id ? focusRequest : null
             }
@@ -93,7 +125,7 @@ function App() {
           <p className="eyebrow">The desk is clear</p>
           <h2>Begin with an empty page.</h2>
           <p>
-            Create a project to start writing. Your work will be kept locally in this browser.
+            Create a project to start writing. Your work will be kept in local SQLite storage.
           </p>
           <button type="button" onClick={handleCreateProject} disabled={isCreating}>
             Create first project
@@ -104,7 +136,10 @@ function App() {
       <ConfirmDialog
         isOpen={Boolean(pendingDeleteProject)}
         projectTitle={pendingDeleteProject?.title || 'Untitled Draft'}
-        onCancel={() => setPendingDeleteId(null)}
+        isBusy={isDeleting}
+        onCancel={() => {
+          if (!isDeleting) setPendingDeleteId(null);
+        }}
         onConfirm={confirmDeleteProject}
       />
     </main>

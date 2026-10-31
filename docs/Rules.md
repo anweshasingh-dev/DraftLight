@@ -5,8 +5,8 @@
 - **Simplicity First:** Avoid premature optimization, heavy frameworks, or unnecessary abstractions. If Python's built-in `sqlite3` or a 20-line React hook accomplishes the task cleanly, do not install a third-party dependency.
 - **Local-First:** Project data and AI inference remain local for the MVP. Do not introduce accounts, cloud sync, telemetry, or hosted AI services without an approved product change.
 - **Preserve User Content:** Treat user-created titles and context as irreplaceable. Migrations and persistence changes must preserve existing data or provide an explicit, recoverable transition.
-- **Maintainable Modularity:** Each module (database, routes, services, AI logic, and frontend components) has one clear responsibility and an obvious interface.
-- **AI-Assisted Friendliness:** Maintain small, readable files (<200 lines where practical), typed Python functions, and clean component contracts.
+- **Maintainable Modularity:** Prefer a small number of cohesive modules with clear responsibilities and obvious interfaces over many tiny files.
+- **AI-Assisted Friendliness:** Keep code readable, use typed Python functions and clean component contracts, and treat approximately 500 lines as a soft file-size guideline rather than a strict limit.
 - **Incremental Delivery:** Implement and verify one roadmap task at a time. Do not expand scope without first updating the product requirements and roadmap.
 
 ---
@@ -30,10 +30,10 @@
 ## 3. Backend Conventions (Python + Flask)
 
 ### Structure & Routing
-- **Modular Blueprints:** Group routes by concern:
-  - `routes/projects.py` for project CRUD.
-  - `routes/analysis.py` for the user-requested analysis workflow.
-  - `routes/system.py` for Ollama health and local model discovery.
+- Keep application setup, health, and application-level errors in `backend/app.py`.
+- Keep related project routes and their validation and orchestration together in `backend/projects.py`.
+- Keep SQLite connection, schema, data access, and transaction logic together in `backend/database.py` while the database remains small.
+- Add a separate feature module for a genuinely distinct concern, such as the later user-requested analysis workflow.
 - **Uniform API Response Structure:**
   - **Success:** `{"success": true, "data": { ... }}`
   - **Error:** `{"success": false, "error": "Human-readable explanation"}`
@@ -42,16 +42,42 @@
 ### Database Rules (SQLite)
 - Always use parameterized queries (`?`) to prevent SQL injection.
 - Manage connections and cursors using Python context managers (`with get_db() as conn:`).
-- Keep schemas clean in `database/schema.sql` and run automatic table creation upon backend startup.
+- Keep a small schema beside the connection and data-access code; split it into migrations or schema files only when its size or evolution justifies that boundary.
+- Run idempotent table creation during backend startup and never reset an existing user database.
 
 ### Code Style
-- Use Python 3.10+ type annotations for service function signatures.
+- Use Python 3.10+ type annotations for application and database functions.
 - Standard PEP 8 formatting.
-- Handle exceptions at service boundaries and return clear error messages to the API layer.
+- Handle exceptions at meaningful application boundaries and return clear errors through the API layer.
 
 ---
 
-## 4. Local AI & Ollama Integration Rules (Critical)
+## 4. Practical Modularity & Incremental Development
+
+### Practical Modularity
+- Prefer a small number of cohesive modules over many tiny files.
+- A file may contain multiple closely related functions.
+- Use approximately 500 lines as a soft guideline, not a strict limit.
+- Do not create a new file simply because a function or class exists.
+- Split a module when its responsibilities become genuinely distinct, its complexity becomes difficult to manage, or it exceeds a reasonable size.
+- Avoid separate service, repository, controller, or utility layers that only forward calls without adding meaningful behavior.
+- Keep related API routes together when they belong to the same feature.
+- Keep database connection and data access logic together when practical.
+- Keep tests separate from application code.
+- Prefer understandable code over architectural ceremony.
+
+### Incremental Development
+- Inspect existing files before creating new ones.
+- Reuse existing modules when appropriate.
+- Make targeted changes.
+- Avoid unnecessary rewrites.
+- Do not introduce new dependencies without a clear reason.
+- Preserve existing behavior unless a task explicitly requires changing it.
+- Update architecture documentation when a structural decision changes.
+
+---
+
+## 5. Local AI & Ollama Integration Rules (Critical)
 
 ### The Non-Overwrite Rule (User Control)
 > [!IMPORTANT]
@@ -72,7 +98,7 @@
 
 ---
 
-## 5. Repository & Contribution Hygiene
+## 6. Repository & Contribution Hygiene
 - **Never commit:** `node_modules/`, `.venv/`, `__pycache__/`, `draftlight.db`, `.env`, or OS junk files (`.DS_Store`, `Thumbs.db`).
 - **Keep PRs atomic:** One feature or fix per pull request.
 - **Document Changes:** Any new API endpoint or configuration flag must be documented in `docs/Architecture.md`.
