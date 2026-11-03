@@ -46,17 +46,21 @@ Implemented project creation, selection, editing, renaming, deletion, timestamps
 
 ## Task 5 — Local AI analysis service through Ollama
 
-**Goal:** Add a backend analysis service without yet building the full user workflow.
+**Status: Complete**
+
+**Goal:** Add a local analysis service and display its continuation guidance in the existing companion panel.
 
 **Acceptance criteria:**
 
 - Ollama configuration and health handling are isolated from routes.
 - The service sends only user-provided text context to a configured local open-weight model.
-- The model is prompted for summary, unfinished areas, questions, and next steps.
+- The model is prompted for where the user left off, unfinished areas, and three practical next steps.
 - Model output is parsed and validated before it reaches the API response.
 - Invalid output, missing models, timeouts, and an offline Ollama daemon produce clear recoverable errors.
 - Analysis is read-only and never changes stored project content.
 - Service tests use mocks or fixtures and do not require live inference.
+- The companion panel provides explicit analyze, loading, cancel, retry, stale-result, and validated result states.
+- The result displays where the user left off, unfinished areas, and exactly three practical next steps.
 
 ## Task 6 — First continuation workflow
 

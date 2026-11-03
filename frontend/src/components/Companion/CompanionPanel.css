@@ -18,7 +18,7 @@
   padding: 0 20px;
 }
 
-.offline-badge {
+.local-badge {
   align-items: center;
   border: 1px solid var(--ink);
   display: flex;
@@ -55,11 +55,128 @@
   margin: 9px 0 14px;
 }
 
-.companion-intro > p:last-child {
+.companion-intro > p:not(.eyebrow):not(.analysis-hint) {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
   margin: 0;
+}
+
+.analysis-action,
+.secondary-action {
+  align-items: center;
+  border: 1px solid var(--ink);
+  display: inline-flex;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  gap: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analysis-action {
+  background: var(--ink);
+  box-shadow: 2px 2px 0 var(--line-strong);
+  color: var(--paper);
+  justify-content: center;
+  margin-top: 18px;
+  padding: 11px 12px;
+  width: 100%;
+}
+
+.analysis-action:hover:not(:disabled) {
+  background: var(--ink-raised);
+}
+
+.analysis-action:active:not(:disabled),
+.secondary-action:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.analysis-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.analysis-action:focus-visible,
+.secondary-action:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.secondary-action {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 10px;
+}
+
+.companion-intro .analysis-hint {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.analysis-loading {
+  border: 1px solid var(--ink);
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 14px;
+}
+
+.analysis-loading strong {
+  font-family: var(--font-editor);
+  font-size: 14px;
+}
+
+.analysis-loading small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.analysis-loading .secondary-action {
+  justify-self: start;
+  margin-top: 5px;
+}
+
+.dither-line {
+  animation: dither-pulse 1.2s steps(4, end) infinite;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.15em;
+}
+
+.analysis-error,
+.companion-empty-state {
+  background: rgb(236 233 226 / 94%);
+  border-bottom: 1px solid var(--ink);
+}
+
+.analysis-error {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+}
+
+.analysis-error > svg {
+  flex: 0 0 auto;
+}
+
+.analysis-error strong {
+  font-family: var(--font-editor);
+  font-size: 14px;
+}
+
+.analysis-error p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 6px 0 12px;
 }
 
 .companion-section {
@@ -82,12 +199,16 @@
   gap: 8px;
 }
 
-.section-heading strong,
+.section-heading h3,
 .section-heading small {
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.section-heading h3 {
+  margin: 0;
 }
 
 .section-heading small {
@@ -121,6 +242,37 @@
   font-family: var(--font-editor);
   font-size: 12px;
   margin: 0;
+}
+
+.analysis-summary {
+  font-family: var(--font-editor);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.unfinished-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.unfinished-list li {
+  border-top: 1px solid var(--line-strong);
+  font-size: 11px;
+  line-height: 1.55;
+  padding: 11px 0 11px 16px;
+  position: relative;
+}
+
+.unfinished-list li::before {
+  content: '—';
+  left: 0;
+  position: absolute;
+}
+
+.unfinished-list li:last-child {
+  border-bottom: 1px solid var(--line-strong);
 }
 
 .direction-list {
@@ -162,6 +314,36 @@
   margin: 4px 0 0;
 }
 
+.direction-list small {
+  border-left: 2px solid var(--ink);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.5;
+  padding-left: 8px;
+}
+
+.companion-empty-state {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 42px 28px;
+  text-align: center;
+}
+
+.companion-empty-state strong {
+  font-family: var(--font-editor);
+  font-size: 15px;
+  margin-top: 12px;
+}
+
+.companion-empty-state p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 7px 0 0;
+}
+
 .companion-footer {
   align-items: flex-start;
   background: var(--ink);
@@ -187,4 +369,20 @@
 .companion-footer small {
   color: var(--paper-muted);
   font-size: 9px;
+}
+
+@keyframes dither-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dither-line {
+    animation: none;
+  }
 }

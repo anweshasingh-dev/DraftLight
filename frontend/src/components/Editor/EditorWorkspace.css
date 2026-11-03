@@ -2,6 +2,7 @@
   background: var(--paper);
   display: grid;
   grid-template-rows: 54px minmax(0, 1fr) 42px;
+  min-height: 0;
   min-width: 0;
   overflow: hidden;
 }

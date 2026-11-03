@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ProjectApiError,
+  analyzeProject,
   createProject,
   deleteProject,
   getProject,
@@ -14,6 +15,16 @@ const project = {
   content: 'Opening line',
   created_at: '2026-10-01T10:00:00Z',
   updated_at: '2026-10-02T10:00:00Z',
+};
+
+const analysis = {
+  where_you_left_off: 'The plan has a goal and a partial checklist.',
+  unfinished: ['The launch date is undecided.'],
+  next_steps: [
+    { title: 'Choose a date', description: 'Resolve the timing.', action: 'List two dates.' },
+    { title: 'Assign review', description: 'Name an owner.', action: 'Choose one reviewer.' },
+    { title: 'Finish the list', description: 'Add missing tasks.', action: 'Write three tasks.' },
+  ],
 };
 
 function response(data, { ok = true, status = 200 } = {}) {
@@ -89,5 +100,38 @@ describe('project API service', () => {
     );
 
     await expect(listProjects()).rejects.toBeInstanceOf(ProjectApiError);
+  });
+
+  it('requests and validates a project analysis', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      response({ success: true, data: { analysis } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const controller = new AbortController();
+
+    await expect(analyzeProject(project.id, { signal: controller.signal })).resolves.toEqual(
+      analysis,
+    );
+    expect(fetchMock).toHaveBeenCalledWith('/api/projects/project-1/analyze', {
+      method: 'POST',
+      signal: controller.signal,
+    });
+  });
+
+  it('keeps safe local-analysis errors and rejects malformed analyses', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValueOnce(
+        response(
+          { success: false, error: 'Draftlight could not reach Ollama. Start Ollama locally.' },
+          { ok: false, status: 503 },
+        ),
+      ).mockResolvedValueOnce(
+        response({ success: true, data: { analysis: { next_steps: [] } } }),
+      ),
+    );
+
+    await expect(analyzeProject(project.id)).rejects.toThrow('could not reach Ollama');
+    await expect(analyzeProject(project.id)).rejects.toThrow('invalid analysis');
   });
 });

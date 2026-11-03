@@ -24,6 +24,14 @@ export function isProject(value) {
 }
 
 function readableError(status, payload) {
+  if (
+    [502, 503, 504].includes(status) &&
+    typeof payload?.error === 'string' &&
+    payload.error
+  ) {
+    return payload.error;
+  }
+
   if (status >= 500) {
     return 'Draftlight could not complete that request. Your work remains in this session.';
   }
@@ -37,7 +45,10 @@ async function request(path, options = {}) {
   let response;
   try {
     response = await fetch(path, options);
-  } catch {
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new ProjectApiError('Analysis cancelled.');
+    }
     throw new ProjectApiError(
       'Draftlight could not reach the local backend. Make sure Flask is running.',
     );
@@ -83,6 +94,32 @@ function requireProjects(projects) {
   return projects;
 }
 
+function requireAnalysis(analysis) {
+  const hasValidText = (value) => typeof value === 'string' && value.trim().length > 0;
+  const hasValidStep = (step) =>
+    step !== null &&
+    typeof step === 'object' &&
+    hasValidText(step.title) &&
+    hasValidText(step.description) &&
+    hasValidText(step.action);
+
+  if (
+    analysis === null ||
+    typeof analysis !== 'object' ||
+    !hasValidText(analysis.where_you_left_off) ||
+    !Array.isArray(analysis.unfinished) ||
+    analysis.unfinished.length === 0 ||
+    !analysis.unfinished.every(hasValidText) ||
+    !Array.isArray(analysis.next_steps) ||
+    analysis.next_steps.length !== 3 ||
+    !analysis.next_steps.every(hasValidStep)
+  ) {
+    throw new ProjectApiError('The backend returned an invalid analysis.');
+  }
+
+  return analysis;
+}
+
 export async function listProjects() {
   const data = await request(PROJECTS_PATH);
   return requireProjects(data.projects);
@@ -114,6 +151,14 @@ export async function deleteProject(projectId) {
     throw new ProjectApiError('The backend returned an invalid deletion response.');
   }
   return data.id;
+}
+
+export async function analyzeProject(projectId, { signal } = {}) {
+  const data = await request(
+    `${PROJECTS_PATH}/${encodeURIComponent(projectId)}/analyze`,
+    { method: 'POST', signal },
+  );
+  return requireAnalysis(data.analysis);
 }
 
 export async function importProjects(projects) {

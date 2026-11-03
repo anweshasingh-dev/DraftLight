@@ -12,7 +12,7 @@ Draftlight is a working name. This repository makes no claim about name availabi
 
 ## Current Status
 
-The frontend project workflow is connected to the local Flask API, with SQLite as the primary project store and safe migration for projects created by the earlier browser-storage version.
+The frontend project workflow is connected to the local Flask API, with SQLite as the primary project store, safe migration for projects created by the earlier browser-storage version, and read-only continuation analysis through local Ollama inference.
 
 Currently implemented:
 
@@ -26,14 +26,10 @@ Currently implemented:
 - Loading, saving, and recoverable backend error states.
 - Automatic SQLite schema initialization and persistent project storage.
 - Isolated backend tests for API behavior and persistence.
-- Placeholder companion states for the future AI workflow.
-
-Not implemented yet:
-
-- Ollama connection or AI inference.
-- Project analysis and next-step suggestions.
-
-The companion panel currently contains placeholders. It does not send project content to an AI service.
+- Configurable local Ollama inference through the Flask backend.
+- Validated continuation analysis with a summary, unfinished areas, and three practical next steps.
+- Companion loading, cancellation, retry, stale-result, and failure states.
+- Read-only AI guidance that never changes project content or persists analysis.
 
 ## Run the Development Environment
 
@@ -42,6 +38,7 @@ The companion panel currently contains placeholders. It does not send project co
 - A current Node.js release.
 - npm.
 - Python 3.10 or newer.
+- [Ollama](https://ollama.com/) and a compatible local chat model for live analysis. Automated tests do not require Ollama.
 
 ### First-time setup
 
@@ -54,6 +51,25 @@ py -m venv .venv
 ```
 
 ### Start both development servers
+
+First, choose and install a lightweight local model. The default is `qwen3:4b`, but any compatible installed model can be configured:
+
+```powershell
+ollama pull qwen3:4b
+ollama list
+```
+
+Draftlight does not download models automatically. If Ollama is not already running in the background, start it in its own terminal with `ollama serve`.
+
+Optional environment configuration for the Flask terminal:
+
+```powershell
+$env:OLLAMA_BASE_URL = "http://127.0.0.1:11434"
+$env:OLLAMA_MODEL = "qwen3:4b"
+$env:OLLAMA_TIMEOUT_SECONDS = "60"
+```
+
+`OLLAMA_BASE_URL` and `OLLAMA_MODEL` use those shown defaults when unset. Set `OLLAMA_MODEL` to the exact name shown by `ollama list` when using another model.
 
 Start Flask in the first terminal:
 
@@ -77,6 +93,8 @@ Vite forwards requests beginning with `/api` to Flask on `http://127.0.0.1:5000`
 For example, `http://127.0.0.1:5173/api/health` is proxied to `http://127.0.0.1:5000/api/health`. Port 5000 remains available for direct backend debugging.
 
 The proxy is development-only. Project management uses the Flask API and SQLite; browser `localStorage` is read only by the legacy migration path. SQLite creates `backend/draftlight.db` automatically when Flask first starts.
+
+When the user requests analysis, the browser posts only the project ID to Flask. Flask reads the stored title and content, sends them to the configured local Ollama HTTP API, validates the structured response, and returns transient guidance. Draftlight does not send project content to cloud AI services and does not store analysis in SQLite.
 
 ### Verification commands
 
@@ -112,7 +130,7 @@ On first load, Draftlight checks the previous `draftlight.projects.v1` browser-s
 - **General workspace:** Do not require project categories or separate interfaces for writing, code, art, or planning.
 - **Small MVP:** Add capabilities incrementally and avoid speculative feature expansion.
 
-## Planned MVP Architecture
+## MVP Architecture
 
 The backend foundation now provides:
 
@@ -121,13 +139,10 @@ The backend foundation now provides:
 - A practical backend split between application setup, project API behavior, configuration, and SQLite access.
 - Frontend CRUD through relative API paths and a development proxy.
 - Safe legacy browser-data migration.
-
-The next phases will add:
-
-- Local inference through Ollama and an open-weight model.
+- Local inference through Ollama and a configurable open-weight model.
 - Structured AI output that is validated before display.
 
-The first AI workflow will summarize the current state, identify unfinished or unclear areas, and suggest a few practical next steps. Analysis remains read-only unless the user deliberately applies a suggestion.
+The first AI workflow summarizes the current state, identifies unfinished or unclear areas, and suggests three practical next steps. Analysis remains read-only.
 
 ## Roadmap
 
@@ -135,7 +150,7 @@ The first AI workflow will summarize the current state, identify unfinished or u
 - [x] Task 2 — Project management and browser persistence.
 - [x] Task 3 — Flask backend and SQLite foundation.
 - [x] Task 4 — Connect frontend project management to the backend.
-- [ ] Task 5 — Local AI analysis service through Ollama.
+- [x] Task 5 — Local AI analysis service through Ollama.
 - [ ] Task 6 — First continuation workflow.
 
 Detailed acceptance criteria are in [docs/Tasks.md](docs/Tasks.md).
@@ -151,7 +166,7 @@ DraftLight/
 │   ├── Rules.md         # Development and AI safety rules
 │   └── Tasks.md         # Incremental implementation roadmap
 ├── frontend/            # React and Vite application
-└── backend/             # Flask API, SQLite access, and backend tests
+└── backend/             # Flask API, SQLite, local Ollama analysis, and tests
 ```
 
 ## Foundation Documents

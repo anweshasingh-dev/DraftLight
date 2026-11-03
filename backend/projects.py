@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from flask import Blueprint, request
+from flask import Blueprint, current_app, request
 
-from . import database
+from . import analysis, database
 
 
 projects_bp = Blueprint("projects", __name__)
@@ -114,6 +114,31 @@ def get_project(project_id: str):
     if project is None:
         return _error("Project not found.", 404)
     return {"success": True, "data": {"project": project}}
+
+
+@projects_bp.post("/api/projects/<string:project_id>/analyze")
+def analyze_project(project_id: str):
+    project = database.get_project(project_id)
+    if project is None:
+        return _error("Project not found.", 404)
+
+    if not any(character.isalnum() for character in project["content"]):
+        return _error(
+            "Add some meaningful project content before requesting an analysis."
+        )
+
+    try:
+        result = analysis.analyze_project(
+            project["title"],
+            project["content"],
+            base_url=current_app.config["OLLAMA_BASE_URL"],
+            model=current_app.config["OLLAMA_MODEL"],
+            timeout=current_app.config["OLLAMA_TIMEOUT_SECONDS"],
+        )
+    except analysis.AnalysisError as analysis_error:
+        return _error(str(analysis_error), analysis_error.status_code)
+
+    return {"success": True, "data": {"analysis": result}}
 
 
 @projects_bp.post("/api/projects")

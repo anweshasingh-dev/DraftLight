@@ -25,6 +25,8 @@ function App() {
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
   const pendingDeleteProject = projects.find((project) => project.id === pendingDeleteId) ?? null;
+  const selectedProjectIsSaved =
+    !statusMessage.includes('Unsaved edits') && !statusMessage.startsWith('Saving');
 
   useEffect(() => {
     if (loadStatus !== 'ready') return;
@@ -108,7 +110,7 @@ function App() {
       ) : selectedProject ? (
         <div className="workspace-shell">
           <EditorWorkspace
-            key={selectedProject.id}
+            key={`editor-${selectedProject.id}`}
             project={selectedProject}
             persistenceLabel={statusMessage}
             focusRequest={
@@ -117,7 +119,11 @@ function App() {
             onTitleChange={(title) => updateSelectedProject('title', title)}
             onContentChange={(content) => updateSelectedProject('content', content)}
           />
-          <CompanionPanel />
+          <CompanionPanel
+            key={`companion-${selectedProject.id}`}
+            project={selectedProject}
+            isProjectSaved={selectedProjectIsSaved}
+          />
         </div>
       ) : (
         <section className="workspace-empty-state">

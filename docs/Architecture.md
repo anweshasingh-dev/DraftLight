@@ -2,9 +2,9 @@
 
 ## 1. Direction and Current State
 
-Draftlight is a local-first application with a React and Vite frontend plus a local Flask and SQLite backend. The frontend uses the Flask project API through relative `/api` paths, and SQLite is the primary project store. The AI area remains a presentational placeholder; no Ollama integration exists yet.
+Draftlight is a local-first application with a React and Vite frontend plus a local Flask and SQLite backend. The frontend uses the Flask project API through relative `/api` paths, SQLite is the primary project store, and continuation analysis runs through a configurable local Ollama daemon.
 
-The next phase adds an Ollama-backed analysis service behind the existing Flask boundary. This extends the current foundation rather than redesigning it.
+The Ollama-backed analysis service sits behind the existing Flask boundary. The browser never calls Ollama directly, and analysis results remain transient read-only guidance.
 
 ```text
 ┌──────────────────────────────────────────────────────┐
@@ -23,7 +23,7 @@ The next phase adds an Ollama-backed analysis service behind the existing Flask 
        └───────────────────┘   └──────────────────────┘
 ```
 
-The diagram describes the intended full MVP architecture. Frontend API integration, Flask, and SQLite are implemented; Ollama remains a future task.
+The diagram describes the implemented Task 5 architecture. Frontend API integration, Flask, SQLite, and local Ollama analysis are connected.
 
 ---
 
@@ -57,9 +57,11 @@ Avoid a UI framework, ORM, state library, or other dependency unless a concrete 
 backend/
 ├── tests/
 │   ├── __init__.py
+│   ├── test_analysis.py         # Mocked Ollama and analysis endpoint tests
 │   └── test_api.py              # Isolated API and persistence tests
+├── analysis.py                  # Prompt, local Ollama HTTP, and response validation
 ├── app.py                       # App factory, health route, errors, startup
-├── config.py                    # Local database path
+├── config.py                    # Database and Ollama configuration
 ├── database.py                  # Schema, connections, SQL, transactions
 ├── projects.py                  # Project routes, validation, orchestration
 └── requirements.txt             # Pinned backend dependencies
@@ -68,8 +70,8 @@ backend/
 - `app.py` creates and configures Flask, initializes the database, registers project routes, exposes health status, and owns application-level error handling.
 - `projects.py` keeps the related project routes, validation, ID and timestamp creation, and CRUD orchestration together. It contains no SQL.
 - `database.py` owns the small SQLite schema, connection lifecycle, parameterized SQL, and import transaction.
-- `config.py` remains separate so the database path can still be overridden through Flask configuration.
-- AI modules own prompts, Ollama communication, parsing, and schema validation.
+- `config.py` owns overridable database, Ollama URL, model, and timeout settings.
+- `analysis.py` owns the continuation prompt, standard-library Ollama HTTP call, error translation, JSON parsing, and strict schema validation.
 - Add a new layer only when it introduces a meaningful boundary; do not add forwarding-only service or repository modules.
 
 ---
@@ -103,8 +105,8 @@ The API model should match the frontend shape to reduce migration risk. AI analy
 - `GET /api/projects/<id>` — retrieve one project.
 - `PUT /api/projects/<id>` — update its title and/or content.
 - `DELETE /api/projects/<id>` — delete a project after explicit UI confirmation.
+- `POST /api/projects/<id>/analyze` — retrieve the stored project, request a validated local Ollama analysis, and return it without writing to SQLite.
 - `GET /api/health` — report backend availability.
-- `POST /api/analysis` — planned for a later task; analyze supplied text context without mutating the project.
 
 Implemented endpoints use `{"success": true, "data": { ... }}` for successful responses and `{"success": false, "error": "Human-readable explanation"}` for errors, with appropriate status codes and validated JSON inputs.
 
@@ -116,16 +118,19 @@ The first response schema is deliberately small and general:
 
 | Field | Type | Purpose |
 |---|---|---|
-| `summary` | string | Concise description of the current state. |
-| `unfinished` | string list | Unfinished parts or open threads. |
-| `questions` | string list | Blockers or unclear points. |
-| `next_steps` | object list | A few titled actions with short rationales. |
+| `where_you_left_off` | string | Concise description of the current state. |
+| `unfinished` | string list | Incomplete parts, open questions, unresolved ideas, or blockers. |
+| `next_steps` | three-object list | Exactly three objects containing `title`, `description`, and `action`. |
 
 - Treat model output as untrusted input.
 - Validate keys, types, list sizes, and reasonable text limits before display.
 - Return a recoverable error for invalid output; never trust raw malformed output.
 - Analysis is read-only and cannot update stored project content.
-- Suggestions remain separate until the user explicitly copies or applies one.
+- Suggestions remain visually and structurally separate from the user's project content.
+
+Ollama receives a non-streaming `/api/chat` request with a JSON schema and low-temperature generation settings. Draftlight still independently validates exact keys, types, list sizes, non-empty text, and text length because a successful local model response is not automatically trusted.
+
+Configuration defaults are `OLLAMA_BASE_URL=http://127.0.0.1:11434`, `OLLAMA_MODEL=qwen3:4b`, and a 60-second timeout. Environment variables may override all three values. Draftlight never pulls a model automatically and never falls back to a cloud provider.
 
 ---
 
@@ -133,7 +138,7 @@ The first response schema is deliberately small and general:
 
 1. Add Flask and SQLite while the frontend continues using its current storage. **Complete.**
 2. Connect CRUD to the API and preserve existing content before SQLite becomes the source of truth. **Complete.**
-3. Add Ollama behind the analysis service.
-4. Add the validated continuation workflow to the existing companion area.
+3. Add Ollama behind the analysis service. **Complete.**
+4. Add the validated continuation workflow to the existing companion area. **Complete for Task 5.**
 
 Repository inspection, image analysis, cloud services, specialized agents, and complex project schemas are outside the MVP.
