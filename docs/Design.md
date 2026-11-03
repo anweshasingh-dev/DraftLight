@@ -157,3 +157,54 @@ The three areas are a project library, a central context workspace, and a narrow
    - Show a concise inline or dialog message that local AI is unavailable, how to retry, and that project editing remains available.
 3. **Save State Indicator:**
    - Monospaced indicator in the bottom bar switching between `[• UNMODIFIED]` and `[✓ SAVED TO DISK]`.
+
+---
+
+## 8. Saved References for Future UI Enhancements
+
+These references are design direction for a later UI-enhancement pass. They are not a request to reproduce any image literally. Preserve Draftlight's writing-first usability, readable text, keyboard access, and responsive behavior when translating the ideas into the product.
+
+### Reference 1: Stored Project Picker — Layered File Tabs
+
+![Layered file tabs for the project picker](assets/reference_project_folder_tabs.jpg)
+
+- **Source artifact:** `docs/assets/reference_project_folder_tabs.jpg`
+- **Primary purpose:** Define how saved project files are presented, selected, and opened.
+- Treat each project like a labeled paper folder or index tab in a browsable stack.
+- Show a short project number or metadata marker beside a clear project title.
+- Make the selected project unmistakable through contrast and foreground position; selecting a tab opens that project.
+- Retain practical library behavior such as scrolling, clear focus states, project actions, and readable labels. The tabs must not overlap text or reduce click targets on smaller screens.
+
+### Reference 2: Overall Layout — Editorial Three-Column Composition
+
+![Editorial three-column layout reference](assets/reference_editorial_layout.jpg)
+
+- **Source artifact:** `docs/assets/reference_editorial_layout.jpg`
+- **Primary purpose:** Guide the application's high-level layout.
+- Use a dark, compact library/navigation rail on the left, a generous central writing area, and a narrower utility or companion panel on the right.
+- Prefer crisp full-height dividers, strong alignment, large editorial headings, and generous negative space.
+- Keep the central editor visually dominant. On narrow screens, collapse or stack secondary areas instead of squeezing the writing surface.
+
+### Reference 3: Colour and Vibe — Warm Paper, Ink, and Drawn Detail
+
+![Warm paper and ink visual reference](assets/reference_colour_vibe.jpg)
+
+- **Source artifact:** `docs/assets/reference_colour_vibe.jpg`
+- **Primary purpose:** Guide the colour palette and overall atmosphere.
+- Build from warm ivory or aged-paper surfaces, near-black ink, quiet gray secondary text, and restrained shadows.
+- Keep the feeling tactile, calm, slightly hand-drawn, and archival rather than glossy or highly saturated.
+- Texture and imperfect line work may add character, but must stay subtle behind long-form writing and meet accessible contrast requirements.
+
+### Reference 4: Buttons and Components — Retro Desktop Utility Panels
+
+![Retro desktop component reference](assets/reference_buttons_components.jpg)
+
+- **Source artifact:** `docs/assets/reference_buttons_components.jpg`
+- **Primary purpose:** Guide buttons, controls, cards, status panels, and other reusable components.
+- Favor compact utility-like controls, strong dark outlines, cream surfaces, shallow elevation, and squared or only slightly rounded geometry.
+- Components should feel like coherent desktop tools: clearly bounded, information-dense where useful, and visibly interactive.
+- Define complete states for every control—default, hover, focus-visible, pressed, disabled, loading, and destructive—without sacrificing keyboard or touch usability.
+
+### Reference Precedence
+
+When the references overlap, use them in this order: Reference 1 for the project library interaction, Reference 2 for page structure, Reference 3 for colour and mood, and Reference 4 for component styling. Existing product requirements and accessibility take precedence over purely decorative details.
