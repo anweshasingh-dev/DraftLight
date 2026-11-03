@@ -185,26 +185,26 @@ These references are design direction for a later UI-enhancement pass. They are 
 - Prefer crisp full-height dividers, strong alignment, large editorial headings, and generous negative space.
 - Keep the central editor visually dominant. On narrow screens, collapse or stack secondary areas instead of squeezing the writing surface.
 
-### Reference 3: Colour and Vibe — Warm Paper, Ink, and Drawn Detail
+### Reference 3: Buttons and Components — Neo-Skeuomorphic UI Kit
 
-![Warm paper and ink visual reference](assets/reference_colour_vibe.jpg)
-
-- **Source artifact:** `docs/assets/reference_colour_vibe.jpg`
-- **Primary purpose:** Guide the colour palette and overall atmosphere.
-- Build from warm ivory or aged-paper surfaces, near-black ink, quiet gray secondary text, and restrained shadows.
-- Keep the feeling tactile, calm, slightly hand-drawn, and archival rather than glossy or highly saturated.
-- Texture and imperfect line work may add character, but must stay subtle behind long-form writing and meet accessible contrast requirements.
-
-### Reference 4: Buttons and Components — Retro Desktop Utility Panels
-
-![Retro desktop component reference](assets/reference_buttons_components.jpg)
+![Neo-skeuomorphic buttons and components reference](assets/reference_buttons_components.jpg)
 
 - **Source artifact:** `docs/assets/reference_buttons_components.jpg`
 - **Primary purpose:** Guide buttons, controls, cards, status panels, and other reusable components.
-- Favor compact utility-like controls, strong dark outlines, cream surfaces, shallow elevation, and squared or only slightly rounded geometry.
-- Components should feel like coherent desktop tools: clearly bounded, information-dense where useful, and visibly interactive.
+- Favor strong ink outlines, warm light surfaces, shallow offset shadows, and squared or moderately rounded geometry.
+- Use consistent elevation, border thickness, radius, icon sizing, spacing, and pressed/inset states across the component system.
 - Define complete states for every control—default, hover, focus-visible, pressed, disabled, loading, and destructive—without sacrificing keyboard or touch usability.
+
+### Reference 4: Colour and Vibe — Warm Retro Desktop
+
+![Warm retro desktop colour and atmosphere reference](assets/reference_colour_vibe.jpg)
+
+- **Source artifact:** `docs/assets/reference_colour_vibe.jpg`
+- **Primary purpose:** Guide the colour palette and overall atmosphere.
+- Build from warm cream and pale yellow surfaces, near-black ink, muted olive or ochre accents, and restrained gray-brown shadows.
+- Keep the feeling calm, nostalgic, personal, and slightly lo-fi rather than glossy or highly saturated.
+- Use the desktop's warm monochromatic cohesion and quiet contrast as inspiration while preserving comfortable long-form reading and accessible contrast.
 
 ### Reference Precedence
 
-When the references overlap, use them in this order: Reference 1 for the project library interaction, Reference 2 for page structure, Reference 3 for colour and mood, and Reference 4 for component styling. Existing product requirements and accessibility take precedence over purely decorative details.
+When the references overlap, use them in this order: Reference 1 for the project library interaction, Reference 2 for page structure, Reference 3 for component styling, and Reference 4 for colour and mood. Existing product requirements and accessibility take precedence over purely decorative details.
