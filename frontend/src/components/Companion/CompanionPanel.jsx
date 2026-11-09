@@ -2,14 +2,25 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Ban,
+  BarChart3,
+  CheckSquare,
+  ChevronUp,
   Cpu,
+  FileText,
+  Lightbulb,
   ListTodo,
+  PenLine,
   ScanText,
   Sparkles,
   X,
 } from 'lucide-react';
 import * as projectApi from '../../services/projectApi';
 import './CompanionPanel.css';
+
+function getWordCount(content) {
+  const trimmed = content.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
 
 function CompanionPanel({
   project,
@@ -67,21 +78,48 @@ function CompanionPanel({
   }
 
   return (
-    <aside className="companion-panel" aria-label="Local AI continuation companion">
+    <aside
+      className="companion-panel"
+      aria-label="Local AI continuation companion"
+      aria-busy={status === 'loading'}
+      data-state={status}
+    >
       <header className="companion-header">
         <span className="window-label">
           <Sparkles size={14} strokeWidth={1.7} aria-hidden="true" />
+          <span>03</span>
           Companion
         </span>
-        <span className="local-badge">
+        <span className="local-badge" data-state={status}>
+          <span className="local-status-light" aria-hidden="true" />
           <Cpu size={11} aria-hidden="true" />
-          Local AI
+          Scan text
         </span>
       </header>
 
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {status === 'loading'
+          ? 'Draftlight is analyzing this project.'
+          : status === 'success'
+            ? 'Project analysis is ready.'
+            : ''}
+      </p>
+
+      <div className='companion-tabs' aria-label='Companion modes'>
+        <button className='is-active' type='button' aria-pressed='true'>
+          <BarChart3 size={15} aria-hidden='true' />Analyze
+        </button>
+        <button type='button' disabled title='Coming soon'>
+          <Lightbulb size={15} aria-hidden='true' />Ideate
+        </button>
+        <button type='button' disabled title='Coming soon'>
+          <PenLine size={15} aria-hidden='true' />Refine
+        </button>
+      </div>
+
       <div className="companion-scroll-area">
         <section className="companion-intro">
-          <p className="eyebrow">A second pair of eyes</p>
+          <p className="eyebrow">A quiet second opinion</p>
           <h2>Find the thread again.</h2>
           <p>
             Draftlight asks your local Ollama model for guidance and keeps the result separate from
@@ -124,6 +162,32 @@ function CompanionPanel({
             </p>
           )}
         </section>
+
+        <section className='snapshot-card' aria-labelledby='snapshot-heading'>
+          <div className='card-heading'>
+            <span><BarChart3 size={16} aria-hidden='true' /><h3 id='snapshot-heading'>Project snapshot</h3></span>
+            <ChevronUp size={15} aria-hidden='true' />
+          </div>
+          <div className='snapshot-grid'>
+            <div><PenLine size={20} aria-hidden='true' /><strong>{getWordCount(project.content)}</strong><span>Words</span></div>
+            <div><Lightbulb size={21} aria-hidden='true' /><strong>{hasMeaningfulContent ? 1 : 0}</strong><span>Scene</span></div>
+            <div><FileText size={21} aria-hidden='true' /><strong>Draft</strong><span>Stage</span></div>
+          </div>
+        </section>
+
+        {!analysis && status !== 'loading' && (
+          <section className='next-steps-card' aria-labelledby='starter-steps-heading'>
+            <div className='card-heading'>
+              <span><CheckSquare size={16} aria-hidden='true' /><h3 id='starter-steps-heading'>Next steps</h3></span>
+              <ChevronUp size={15} aria-hidden='true' />
+            </div>
+            <div className='starter-checklist'>
+              <div><span aria-hidden='true' />Clarify the next small outcome</div>
+              <div><span aria-hidden='true' />Add the missing detail or decision</div>
+              <div><span aria-hidden='true' />Move the draft one step forward</div>
+            </div>
+          </section>
+        )}
 
         {status === 'error' && (
           <section className="analysis-error" role="alert">

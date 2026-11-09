@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { EllipsisVertical, Feather, FileText, PenLine, Plus, Trash2 } from 'lucide-react';
+import {
+  BarChart3,
+  EllipsisVertical,
+  Feather,
+  FileText,
+  FolderOpen,
+  Home,
+  Library,
+  PenLine,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import './ProjectSidebar.css';
 import './ProjectMenu.css';
 
@@ -9,22 +20,15 @@ function getPreview(content) {
 }
 
 function formatModified(timestamp) {
-  const elapsed = Date.now() - new Date(timestamp).getTime();
-  const minutes = Math.max(0, Math.floor(elapsed / 60000));
-
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-
-  return new Intl.DateTimeFormat('en', {
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? 'recently' : new Intl.DateTimeFormat('en', {
     month: 'short',
     day: 'numeric',
-  }).format(new Date(timestamp));
+  }).format(date);
+}
+
+function formatProjectNumber(index) {
+  return String(index + 1).padStart(2, '0');
 }
 
 function ProjectSidebar({
@@ -47,14 +51,34 @@ function ProjectSidebar({
         </span>
         <span>
           <strong>DraftLight</strong>
-          <small>Unfinished stories, kept close.</small>
+          <small>A little light for unfinished work.</small>
         </span>
       </header>
+
+      <nav className='primary-nav' aria-label='Primary navigation'>
+        <button className='primary-nav-item is-active' type='button'>
+          <Home size={19} strokeWidth={1.7} aria-hidden='true' />
+          Home
+        </button>
+        <button className='primary-nav-item' type='button'>
+          <Library size={19} strokeWidth={1.7} aria-hidden='true' />
+          Library
+        </button>
+        <button className='primary-nav-item' type='button'>
+          <FolderOpen size={19} strokeWidth={1.7} aria-hidden='true' />
+          Open projects
+          <span className='nav-count'>{projects.length}</span>
+        </button>
+        <button className='primary-nav-item' type='button'>
+          <BarChart3 size={19} strokeWidth={1.7} aria-hidden='true' />
+          Insights
+        </button>
+      </nav>
 
       <div className="library-heading">
         <div>
           <p className="eyebrow">Library</p>
-          <h1>Your drafts</h1>
+          <h1>Open projects</h1>
         </div>
         <span className="project-count" aria-label={`${projects.length} projects`}>
           {String(projects.length).padStart(2, '0')}
@@ -71,9 +95,9 @@ function ProjectSidebar({
         {isCreating ? 'Creating…' : 'New project'}
       </button>
 
-      <nav className="project-list" aria-label="Writing projects">
+      <nav className="project-list" aria-label="Projects">
         {projects.length > 0 ? (
-          projects.map((project) => (
+          projects.map((project, index) => (
             <div
               className="project-list-row"
               key={project.id}
@@ -92,7 +116,9 @@ function ProjectSidebar({
                 }}
               >
                 <span className="project-item-title">
-                  <FileText size={14} strokeWidth={1.7} aria-hidden="true" />
+                  <span className="project-index" aria-hidden="true">
+                    {formatProjectNumber(index)}
+                  </span>
                   <strong>{project.title || 'Untitled Draft'}</strong>
                 </span>
                 <span className="project-preview">{getPreview(project.content)}</span>
